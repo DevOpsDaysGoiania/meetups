@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="date" content="2024-10-04" />
+  <title>Karpenter: simplificando o auto provisionamento de nós K8s na AWS e Azure.</title>
+  <style type="text/css">
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+    href="https://www.w3.org/Talks/Tools/Slidy2/styles/slidy.css" />
+  <script src="https://www.w3.org/Talks/Tools/Slidy2/scripts/slidy.js"
+    charset="utf-8" type="text/javascript"></script>
+</head>
+<body>
+<div class="slide titlepage">
+  <h1 class="title">Karpenter: simplificando o auto provisionamento de
+nós K8s na AWS e Azure.</h1>
+  <p class="date">2024-10-04</p>
+</div>
+<div id="sobre-mim" class="slide section level1">
+<h1>Sobre mim</h1>
+<ul>
+<li>Graduado em Engenharia de Software na UFG.</li>
+<li>Mais de 13 anos trabalhando com TI.</li>
+<li>Ajudo empresas novas no mercado com práticas DevOps, arquitetura na
+nuvem e observabilidade.</li>
+</ul>
+</div>
+<div id="primeiro" class="slide section level1">
+<h1>Primeiro</h1>
+<p>Você precisa entender o comportamento de sua aplicação e adequá-la
+para tal.</p>
+<h3 id="execução">Execução</h3>
+<ul>
+<li>Stateless: não guarda dados em tempo de execução</li>
+<li>Stateful: guarda dados, ao iniciar vai precisar desses dados.</li>
+</ul>
+<p>Vai influenciar no escalonamento da aplicação.</p>
+<h3 id="recurso">Recurso</h3>
+<ul>
+<li>CPU Bound: Cálculos pesados, muito I/O.</li>
+<li>Memory Bound: Datasets, estruturas de dados grandes (hashmap,
+vetores).</li>
+<li>General Purpose: Um pouco dos 2.</li>
+</ul>
+<p>Vai influenciar no provisionamento do nó correto.</p>
+</div>
+<div id="regras-pra-evitar-dor-de-cabeça-desnecessária"
+class="slide section level1">
+<h1>Regras pra evitar dor de cabeça desnecessária</h1>
+<p>Para Horizontal Pod Autoscaler, prepare sua aplicação para ser
+Stateless.</p>
+<p>E para aplicações Stateful use o Vertical Pod Autoscaler.</p>
+<p>Obs.: Existem estratégias para escalonar aplicações Stateful de forma
+horizontal com PVs em RWX.</p>
+</div>
+<div id="dicas-de-ouro" class="slide section level1">
+<h1>Dicas de ouro</h1>
+<ul>
+<li>SEMPRE configurar Resource Requests para seus workloads.</li>
+<li>Utilizar o prometheus-adapter a fim de ter métricas de tráfego e
+latência. E para aplicações que rodam em background tem o Kubernetes
+Event-Driven Autoscaler (KEDA).</li>
+<li>HPA: Entender limite de tráfego (req/s, ops/s) que sua aplicação
+suporta. Olhar para saturação pode ser uma falsa métrica de
+escalonar.</li>
+<li>VPA: Olhar para saturação.</li>
+</ul>
+</div>
+<div id="karpenter" class="slide section level1">
+<h1>Karpenter</h1>
+<h2 id="conceitos"><a
+href="https://karpenter.sh/docs/concepts/">Conceitos</a></h2>
+<ul>
+<li><p>Configurações para comunicação entre o Controller &lt;-&gt;
+Provider</p></li>
+<li><p>CRD NodePool e NodeClass <a
+href="https://github.com/aws/karpenter-provider-aws/tree/main/examples/v1">Exemplos</a></p></li>
+<li><p>Schedulling: Resource Request, Node affinity (gpu, cpu), Topology
+(hostname, zones)</p></li>
+<li><p>NodeClaim: Provisionamento de nós Just-in-time Capacity</p></li>
+<li><p>Disruption: Consolidação do cluster (WhenEmpty,
+WhenEmptyOrUnderutilized, Budgets)</p></li>
+<li><p>Também tem suporte para instâncias spot.</p></li>
+</ul>
+</div>
+<div id="um-pouco-de-mão-na-massa." class="slide section level1">
+<h1>Um pouco de mão na massa.</h1>
+<p><a
+href="https://github.com/gmtborges/karpenter-demo">https://github.com/gmtborges/karpenter-demo</a></p>
+</div>
+<div id="obrigado" class="slide section level1">
+<h1>Obrigado</h1>
+<ul>
+<li><span class="citation">@gmtborges</span></li>
+<li>linkedin.com/in/gmtborges</li>
+</ul>
+</div>
+<div id="referências" class="slide section level1">
+<h1>Referências</h1>
+<ul>
+<li><a href="https://karpenter.sh/">Karpenter</a></li>
+<li><a
+href="https://www.eksworkshop.com/docs/autoscaling/compute/karpenter/">EKS
+Workshop</a></li>
+<li><a href="https://github.com/kubernetes-sigs/karpenter">Karpenter
+Github</a></li>
+<li><a
+href="https://www.youtube.com/watch?v=sxDtmzbNHwE&amp;t=3931s">Karpenter
+on AWS</a></li>
+<li><a
+href="https://github.com/Azure/karpenter-provider-azure">Karpenter on
+Azure</a></li>
+<li><a href="https://www.youtube.com/watch?v=wlkJGjcjN6o">Karpenter on
+OKE</a></li>
+</ul>
+</div>
+</body>
+</html>
